@@ -64,6 +64,7 @@ allMessages.update(messageDict['control'])
 allMessages.update(messageDict['general'])
 
 json_data['all_msgs'] = allMessages
+json_data['all_fields'] = list(set([msg['name'] for key, message in allMessages.items() for msg in message['payload']]))
 
 j2_env.globals['structToken'] = struct_token
 j2_env.globals.update(calc_payload = calc_payload)
