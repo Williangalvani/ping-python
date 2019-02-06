@@ -491,7 +491,14 @@ class PingMessage(object):
         for i, attr in enumerate(PingMessage.header_field_names):
             setattr(self, attr, header[i])
 
-        if self.payload_length > 0:
+
+        try:
+            # This will fail if the class is not completely populated yet.
+            payload_length = self.get_payload_length()
+        except AttributeError as e:
+            return
+
+        if payload_length > 0:
             # Extract payload
             try:
                 payload = struct.unpack(PingMessage.endianess + self.get_payload_format(), self.msg_data[PingMessage.headerLength:PingMessage.headerLength + self.payload_length])
