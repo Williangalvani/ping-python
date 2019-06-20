@@ -59,7 +59,7 @@ class Ping1D(object):
 
             ## Serial object for device communication
             self.iodev = serial.Serial(device_name, baudrate)
-            self.iodev.timeout = 1
+            self.iodev.timeout = 0
 
         except Exception as e:
             print("Failed to open the given serial port")
