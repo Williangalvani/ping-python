@@ -30,7 +30,6 @@ definitions = [ "common",
                 "ping1d",
                 "ping360"]
 
-
 struct_token = {"u8": "B",
                 "u16": "H",
                 "u32": "I",
@@ -39,22 +38,23 @@ struct_token = {"u8": "B",
                 "i32": "i",
                 "char": "s"}
 
-f = open("%s/pingmessage_definitions.py" % args.output_directory, "w")
+f = open("%s/definitions.py" % args.output_directory, "w")
 
 for definition in definitions:
     definitionFile = "%s/%s.json" % (definitionPath, definition)
     f.write(g.generate(definitionFile, templateFile, {"structToken": struct_token, "base": definition}))
 
-
+#allString = "payload_dict_all = {}\n"
+# add PINGMESSAGE_UNDEFINED for legacy request support
 allString = '\
-PINGMESSAGE_UNDEFINED = 0\
-payload_dict_all = {\
-    PINGMESSAGE_UNDEFINED: {\
-        "name": "undefined",\
-        "format": "",\
-        "field_names": (),\
-        "payload_length": 0\
-    },\
+PINGMESSAGE_UNDEFINED = 0\n\
+payload_dict_all = {\n\
+    PINGMESSAGE_UNDEFINED: {\n\
+        "name": "undefined",\n\
+        "format": "",\n\
+        "field_names": (),\n\
+        "payload_length": 0\n\
+    },\n\
 }\n'
 
 f.write(allString)
