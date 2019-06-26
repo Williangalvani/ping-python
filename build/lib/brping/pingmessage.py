@@ -9,10 +9,361 @@
 # ~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!
 
 import struct
-import definitions
-payload_dict = definitions.payload_dict_all
-asciiMsgs = [definitions.COMMON_NACK, definitions.COMMON_ASCII_TEXT]
-variable_msgs = [definitions.PING1D_PROFILE, ]
+
+'''
+A reminder for struct formatting:
+b = i8
+B = u8
+h = i16
+H = u16
+i = i32
+I = u32
+char[] = s
+'''
+
+PING1D_ACK = 1
+PING1D_ASCII_TEXT = 3
+PING1D_CONTINUOUS_START = 1400
+PING1D_CONTINUOUS_STOP = 1401
+PING1D_DEVICE_ID = 1201
+PING1D_DISTANCE = 1212
+PING1D_DISTANCE_SIMPLE = 1211
+PING1D_FIRMWARE_VERSION = 1200
+PING1D_GAIN_INDEX = 1207
+PING1D_GENERAL_INFO = 1210
+PING1D_GOTO_BOOTLOADER = 1100
+PING1D_MODE_AUTO = 1205
+PING1D_NACK = 2
+PING1D_PCB_TEMPERATURE = 1214
+PING1D_PING_ENABLE = 1215
+PING1D_PING_INTERVAL = 1206
+PING1D_PROCESSOR_TEMPERATURE = 1213
+PING1D_PROFILE = 1300
+PING1D_PROTOCOL_VERSION = 5
+PING1D_PULSE_DURATION = 1208
+PING1D_RANGE = 1204
+PING1D_SET_DEVICE_ID = 1000
+PING1D_SET_GAIN_INDEX = 1005
+PING1D_SET_MODE_AUTO = 1003
+PING1D_SET_PING_ENABLE = 1006
+PING1D_SET_PING_INTERVAL = 1004
+PING1D_SET_RANGE = 1001
+PING1D_SET_SPEED_OF_SOUND = 1002
+PING1D_SPEED_OF_SOUND = 1203
+PING1D_UNDEFINED = 0
+PING1D_VOLTAGE_5 = 1202
+
+# variable length fields are formatted with 's', and always occur at the end of the payload
+# the format string for these messages is adjusted at runtime, and 's' inserted appropriately at runtime
+# see PingMessage.get_payload_format()
+payload_dict = {
+    PING1D_ACK: {
+        "name": "ack",
+        "format": "H",
+        "field_names": (
+             "acked_id",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_ASCII_TEXT: {
+        "name": "ascii_text",
+        "format": "",
+        "field_names": (
+             "ascii_message",
+            ),
+        "payload_length": 0
+    },
+
+    PING1D_CONTINUOUS_START: {
+        "name": "continuous_start",
+        "format": "H",
+        "field_names": (
+             "id",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_CONTINUOUS_STOP: {
+        "name": "continuous_stop",
+        "format": "H",
+        "field_names": (
+             "id",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_DEVICE_ID: {
+        "name": "device_id",
+        "format": "B",
+        "field_names": (
+             "device_id",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_DISTANCE: {
+        "name": "distance",
+        "format": "IHHIIII",
+        "field_names": (
+             "distance",
+             "confidence",
+             "pulse_duration",
+             "ping_number",
+             "scan_start",
+             "scan_length",
+             "gain_index",
+            ),
+        "payload_length": 24
+    },
+
+    PING1D_DISTANCE_SIMPLE: {
+        "name": "distance_simple",
+        "format": "IB",
+        "field_names": (
+             "distance",
+             "confidence",
+            ),
+        "payload_length": 5
+    },
+
+    PING1D_FIRMWARE_VERSION: {
+        "name": "firmware_version",
+        "format": "BBHH",
+        "field_names": (
+             "device_type",
+             "device_model",
+             "firmware_version_major",
+             "firmware_version_minor",
+            ),
+        "payload_length": 6
+    },
+
+    PING1D_GAIN_INDEX: {
+        "name": "gain_index",
+        "format": "I",
+        "field_names": (
+             "gain_index",
+            ),
+        "payload_length": 4
+    },
+
+    PING1D_GENERAL_INFO: {
+        "name": "general_info",
+        "format": "HHHHBB",
+        "field_names": (
+             "firmware_version_major",
+             "firmware_version_minor",
+             "voltage_5",
+             "ping_interval",
+             "gain_index",
+             "mode_auto",
+            ),
+        "payload_length": 10
+    },
+
+    PING1D_GOTO_BOOTLOADER: {
+        "name": "goto_bootloader",
+        "format": "",
+        "field_names": (
+            ),
+        "payload_length": 0
+    },
+
+    PING1D_MODE_AUTO: {
+        "name": "mode_auto",
+        "format": "B",
+        "field_names": (
+             "mode_auto",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_NACK: {
+        "name": "nack",
+        "format": "H",
+        "field_names": (
+             "nacked_id",
+             "nack_message",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_PCB_TEMPERATURE: {
+        "name": "pcb_temperature",
+        "format": "H",
+        "field_names": (
+             "pcb_temperature",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_PING_ENABLE: {
+        "name": "ping_enable",
+        "format": "B",
+        "field_names": (
+             "ping_enabled",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_PING_INTERVAL: {
+        "name": "ping_interval",
+        "format": "H",
+        "field_names": (
+             "ping_interval",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_PROCESSOR_TEMPERATURE: {
+        "name": "processor_temperature",
+        "format": "H",
+        "field_names": (
+             "processor_temperature",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_PROFILE: {
+        "name": "profile",
+        "format": "IHHIIIIH",
+        "field_names": (
+             "distance",
+             "confidence",
+             "pulse_duration",
+             "ping_number",
+             "scan_start",
+             "scan_length",
+             "gain_index",
+             "profile_data_length",
+             "profile_data",
+            ),
+        "payload_length": 26
+    },
+
+    PING1D_PROTOCOL_VERSION: {
+        "name": "protocol_version",
+        "format": "I",
+        "field_names": (
+             "protocol_version",
+            ),
+        "payload_length": 4
+    },
+
+    PING1D_PULSE_DURATION: {
+        "name": "pulse_duration",
+        "format": "H",
+        "field_names": (
+             "pulse_duration",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_RANGE: {
+        "name": "range",
+        "format": "II",
+        "field_names": (
+             "scan_start",
+             "scan_length",
+            ),
+        "payload_length": 8
+    },
+
+    PING1D_SET_DEVICE_ID: {
+        "name": "set_device_id",
+        "format": "B",
+        "field_names": (
+             "device_id",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_SET_GAIN_INDEX: {
+        "name": "set_gain_index",
+        "format": "B",
+        "field_names": (
+             "gain_index",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_SET_MODE_AUTO: {
+        "name": "set_mode_auto",
+        "format": "B",
+        "field_names": (
+             "mode_auto",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_SET_PING_ENABLE: {
+        "name": "set_ping_enable",
+        "format": "B",
+        "field_names": (
+             "ping_enabled",
+            ),
+        "payload_length": 1
+    },
+
+    PING1D_SET_PING_INTERVAL: {
+        "name": "set_ping_interval",
+        "format": "H",
+        "field_names": (
+             "ping_interval",
+            ),
+        "payload_length": 2
+    },
+
+    PING1D_SET_RANGE: {
+        "name": "set_range",
+        "format": "II",
+        "field_names": (
+             "scan_start",
+             "scan_length",
+            ),
+        "payload_length": 8
+    },
+
+    PING1D_SET_SPEED_OF_SOUND: {
+        "name": "set_speed_of_sound",
+        "format": "I",
+        "field_names": (
+             "speed_of_sound",
+            ),
+        "payload_length": 4
+    },
+
+    PING1D_SPEED_OF_SOUND: {
+        "name": "speed_of_sound",
+        "format": "I",
+        "field_names": (
+             "speed_of_sound",
+            ),
+        "payload_length": 4
+    },
+
+    PING1D_UNDEFINED: {
+        "name": "undefined",
+        "format": "",
+        "field_names": (
+            ),
+        "payload_length": 0
+    },
+
+    PING1D_VOLTAGE_5: {
+        "name": "voltage_5",
+        "format": "H",
+        "field_names": (
+             "voltage_5",
+            ),
+        "payload_length": 2
+    },
+
+}
+
+asciiMsgs = [PING1D_NACK, PING1D_ASCII_TEXT]
+variable_msgs = [PING1D_PROFILE, ]
 
 
 class PingMessage(object):
@@ -78,7 +429,8 @@ class PingMessage(object):
         self.message_id = msg_id
         ## The request id for request messages
         self.request_id = None
-
+        ## Number of bytes in the message payload
+        self.payload_length = payload_dict[msg_id]["payload_length"]
         ## The message destination
         self.dst_device_id = 0
         ## The message source
@@ -92,22 +444,12 @@ class PingMessage(object):
         if msg_data is not None:
             self.unpack_msg_data(msg_data)
 
-        try:
-            ## Number of bytes in the message payload
-            self.payload_length = payload_dict[self.message_id]["payload_length"]
-
-            ## The name of this message
-            self.name = payload_dict[self.message_id]["name"]
-
-            ## The struct formatting string for the message payload
-            self.payload_format = payload_dict[self.message_id]["format"]
-
-            ## The field names of this message
-            self.payload_field_names = payload_dict[self.message_id]["field_names"]
-
-        except KeyError as e:
-            print("message id not recognized: %d" % self.message_id, msg_data)
-            raise e
+        ## The name of this message
+        self.name = payload_dict[self.message_id]["name"]
+        ## The struct formatting string for the message payload
+        self.payload_format = payload_dict[msg_id]["format"]
+        ## The field names of this message
+        self.payload_field_names = payload_dict[msg_id]["field_names"]
 
     ## Pack object attributes into self.msg_data (bytearray)
     # @return self.msg_data
@@ -383,7 +725,7 @@ if __name__ == "__main__":
     # Connect to a device
     s = serial.Serial(args.device, args.baudrate)
     while True:
-        m = PingMessage(definitions.PING1D_SET_PING_INTERVAL)
+        m = PingMessage(PING1D_SET_PING_INTERVAL)
         m.ping_interval = 40
         m.pack_msg_data()
         s.write(m.msg_data)
@@ -394,21 +736,21 @@ if __name__ == "__main__":
                 print(p.rx_msg)
 
         m = PingMessage()
-        m.request_id = definitions.PING1D_PROFILE
+        m.request_id = PING1D_PROFILE
         m.pack_msg_data()
         s.write(m.msg_data)
         time.sleep(0.05)
         while s.in_waiting:
             if p.parse_byte(s.read()) == PingParser.NEW_MESSAGE:
                 print(p.rx_msg)
-        m.request_id = definitions.PING1D_VOLTAGE_5
+        m.request_id = PING1D_VOLTAGE_5
         m.pack_msg_data()
         s.write(m.msg_data)
         time.sleep(0.01)
         while s.in_waiting:
             if p.parse_byte(s.read()) == PingParser.NEW_MESSAGE:
                 print(p.rx_msg)
-        m.request_id = definitions.PING1D_DISTANCE_SIMPLE
+        m.request_id = PING1D_DISTANCE_SIMPLE
         m.pack_msg_data()
         s.write(m.msg_data)
         time.sleep(0.01)
