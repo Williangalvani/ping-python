@@ -12,7 +12,7 @@ import struct
 import definitions
 payload_dict = definitions.payload_dict_all
 asciiMsgs = [definitions.COMMON_NACK, definitions.COMMON_ASCII_TEXT]
-variable_msgs = [definitions.PING1D_PROFILE, ]
+variable_msgs = [definitions.PING1D_PROFILE, definitions.PING360_DEVICE_DATA]
 
 
 class PingMessage(object):
@@ -90,6 +90,7 @@ class PingMessage(object):
         # update with pack_msg_data()
         self.msg_data = None
         if msg_data is not None:
+            print(msg_data)
             self.unpack_msg_data(msg_data)
 
         try:
@@ -157,9 +158,15 @@ class PingMessage(object):
                 print("error unpacking payload: %s" % e)
                 print("msg_data: %s, header: %s" % (msg_data, header))
                 print("format: %s, buf: %s" % (PingMessage.endianess + self.get_payload_format(), self.msg_data[PingMessage.headerLength:PingMessage.headerLength + self.payload_length]))
+                print(self.get_payload_format())
             else:  # only use payload if didn't raise exception
+                print(payload)
                 for i, attr in enumerate(payload_dict[self.message_id]["field_names"]):
-                    setattr(self, attr, payload[i])
+                    try:
+                        setattr(self, attr, payload[i])
+                    except IndexError as e:
+                        if self.message_id in variable_msgs:
+                            pass
 
         # Extract checksum
         self.checksum = struct.unpack(PingMessage.endianess + PingMessage.checksum_format, self.msg_data[PingMessage.headerLength + self.payload_length: PingMessage.headerLength + self.payload_length + PingMessage.checksumLength])[0]
@@ -196,7 +203,7 @@ class PingMessage(object):
         if self.message_id in variable_msgs or self.message_id in asciiMsgs:
             var_length = self.payload_length - payload_dict[self.message_id]["payload_length"]  # Subtract static length portion from payload length
             if var_length <= 0:
-                return ""  # variable data portion is empty
+                return payload_dict[self.message_id]["format"]  # variable data portion is empty
 
             return payload_dict[self.message_id]["format"] + str(var_length) + "s"
         else: # messages with a static (constant) length
