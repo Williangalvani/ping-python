@@ -45,7 +45,18 @@ for definition in definitions:
     definitionFile = "%s/%s.json" % (definitionPath, definition)
     f.write(g.generate(definitionFile, templateFile, {"structToken": struct_token, "base": definition}))
 
-allString = "payload_dict_all = {}\n"
+
+allString = '\
+PINGMESSAGE_UNDEFINED = 0\
+payload_dict_all = {\
+    PINGMESSAGE_UNDEFINED: {\
+        "name": "undefined",\
+        "format": "",\
+        "field_names": (),\
+        "payload_length": 0\
+    },\
+}\n'
+
 f.write(allString)
 
 for definition in definitions:
