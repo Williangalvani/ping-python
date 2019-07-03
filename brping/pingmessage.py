@@ -90,7 +90,6 @@ class PingMessage(object):
         # update with pack_msg_data()
         self.msg_data = None
         if msg_data is not None:
-            print(msg_data)
             self.unpack_msg_data(msg_data)
 
         try:
@@ -148,13 +147,11 @@ class PingMessage(object):
         header = struct.unpack(PingMessage.endianess + PingMessage.header_format, self.msg_data[0:PingMessage.headerLength])
 
         for i, attr in enumerate(PingMessage.header_field_names):
-            print(attr, header[i])
             setattr(self, attr, header[i])
 
         if self.payload_length > 0:
             # Extract payload
             try:
-                print("format:", self.get_payload_format())
                 payload = struct.unpack(PingMessage.endianess + self.get_payload_format(), self.msg_data[PingMessage.headerLength:PingMessage.headerLength + self.payload_length])
             except Exception as e:
                 print("error unpacking payload: %s" % e)
@@ -162,11 +159,9 @@ class PingMessage(object):
                 print("format: %s, buf: %s" % (PingMessage.endianess + self.get_payload_format(), self.msg_data[PingMessage.headerLength:PingMessage.headerLength + self.payload_length]))
                 print(self.get_payload_format())
             else:  # only use payload if didn't raise exception
-                print(payload)
                 for i, attr in enumerate(payload_dict[self.message_id]["field_names"]):
                     try:
                         setattr(self, attr, payload[i])
-                        print(attr, payload[i])
                     except IndexError as e:
                         if self.message_id in variable_msgs:
                             setattr(self, attr, bytearray())
@@ -283,7 +278,6 @@ class PingParser(object):
     # If the byte fed completes a valid message, return PingParser.NEW_MESSAGE
     # The decoded message will be available in the self.rx_msg attribute until a new message is decoded
     def parse_byte(self, msg_byte):
-        print(msg_byte, self.state)
         if type(msg_byte) != int:
             msg_byte = ord(msg_byte)
         # print("byte: %d, state: %d, rem: %d, id: %d" % (msg_byte, self.state, self.payload_length, self.message_id))

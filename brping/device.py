@@ -250,14 +250,27 @@ if __name__ == "__main__":
     m.mode = 1
     m.gain_setting = 0
     m.angle = 1
-    m.transmit_duration = 32
-    m.sample_period = 80
-    m.transmit_frequency = 500
-    m.number_of_samples = 200
+    m.transmit_duration = 5
+    m.sample_period = 40000
+    m.transmit_frequency = 1000
+    m.number_of_samples = 1200
     m.transmit = 1
     m.reserved = 0
     m.pack_msg_data()
     p.write(m.msg_data)
     print(p.wait_message(definitions.PING360_DEVICE_DATA, 6.0))
-     
+
+
+    p.write(bytearray("asBdf".encode("utf-8")))
+
+    print("\ntesting get_device_data")
+    result = p.get_device_data()
+    print("  " + str(result))
+    print("  > > pass: %s < <" % (result is not None))
+
+    print("\ntesting get_device_data")
+    result = p.get_device_data()
+    print("  " + str(result))
+    print("  > > pass: %s < <" % (result is not None))
+
     print(p)
