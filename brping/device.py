@@ -8,7 +8,7 @@
 # DO NOT EDIT
 # ~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!
 
-import pingmessage
+from brping import pingmessage
 import definitions
 import serial
 import time
@@ -219,7 +219,7 @@ class PingDevice(object):
 
 if __name__ == "__main__":
     import argparse
-
+    import pingmessage
     parser = argparse.ArgumentParser(description="Ping python library example.")
     parser.add_argument('--device', action="store", required=True, type=str, help="Ping device port.")
     parser.add_argument('--baudrate', action="store", type=int, default=115200, help="Ping device baudrate.")
@@ -244,4 +244,20 @@ if __name__ == "__main__":
     print("  " + str(result))
     print("  > > pass: %s < <" % (result is not None))
 
+
+    print("\ntesting control_transducer")
+    m = pingmessage.PingMessage(definitions.PING360_TRANSDUCER)
+    m.mode = 1
+    m.gain_setting = 0
+    m.angle = 1
+    m.transmit_duration = 32
+    m.sample_period = 80
+    m.transmit_frequency = 500
+    m.number_of_samples = 200
+    m.transmit = 1
+    m.reserved = 0
+    m.pack_msg_data()
+    p.write(m.msg_data)
+    print(p.wait_message(definitions.PING360_DEVICE_DATA, 6.0))
+     
     print(p)

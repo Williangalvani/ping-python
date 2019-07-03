@@ -95,7 +95,6 @@ class PingMessage(object):
 
         try:
             ## Number of bytes in the message payload
-            self.payload_length = payload_dict[self.message_id]["payload_length"]
 
             ## The name of this message
             self.name = payload_dict[self.message_id]["name"]
@@ -105,6 +104,7 @@ class PingMessage(object):
 
             ## The field names of this message
             self.payload_field_names = payload_dict[self.message_id]["field_names"]
+            self.update_payload_length()
 
         except KeyError as e:
             print("message id not recognized: %d" % self.message_id, msg_data)
@@ -148,11 +148,13 @@ class PingMessage(object):
         header = struct.unpack(PingMessage.endianess + PingMessage.header_format, self.msg_data[0:PingMessage.headerLength])
 
         for i, attr in enumerate(PingMessage.header_field_names):
+            print(attr, header[i])
             setattr(self, attr, header[i])
 
         if self.payload_length > 0:
             # Extract payload
             try:
+                print("format:", self.get_payload_format())
                 payload = struct.unpack(PingMessage.endianess + self.get_payload_format(), self.msg_data[PingMessage.headerLength:PingMessage.headerLength + self.payload_length])
             except Exception as e:
                 print("error unpacking payload: %s" % e)
@@ -164,8 +166,10 @@ class PingMessage(object):
                 for i, attr in enumerate(payload_dict[self.message_id]["field_names"]):
                     try:
                         setattr(self, attr, payload[i])
+                        print(attr, payload[i])
                     except IndexError as e:
                         if self.message_id in variable_msgs:
+                            setattr(self, attr, bytearray())
                             pass
 
         # Extract checksum
@@ -202,6 +206,7 @@ class PingMessage(object):
         # messages with variable length fields
         if self.message_id in variable_msgs or self.message_id in asciiMsgs:
             var_length = self.payload_length - payload_dict[self.message_id]["payload_length"]  # Subtract static length portion from payload length
+            print("length:", var_length, self.payload_length)
             if var_length <= 0:
                 return payload_dict[self.message_id]["format"]  # variable data portion is empty
 
@@ -278,6 +283,7 @@ class PingParser(object):
     # If the byte fed completes a valid message, return PingParser.NEW_MESSAGE
     # The decoded message will be available in the self.rx_msg attribute until a new message is decoded
     def parse_byte(self, msg_byte):
+        print(msg_byte, self.state)
         if type(msg_byte) != int:
             msg_byte = ord(msg_byte)
         # print("byte: %d, state: %d, rem: %d, id: %d" % (msg_byte, self.state, self.payload_length, self.message_id))
@@ -338,6 +344,7 @@ class PingParser(object):
                 self.parsed += 1
                 return PingParser.NEW_MESSAGE
             else:
+                print("error")
                 self.errors += 1
 
         return self.state
