@@ -326,20 +326,15 @@ class PingParser(object):
             self.state += 1
         elif self.state == PingParser.WAIT_CHECKSUM_H:
             self.buf.append(msg_byte)
-            self.rx_msg = PingMessage(msg_data=self.buf)
+            #self.rx_msg = PingMessage(msg_data=self.buf)
 
             # print(self.rx_msg)
 
             self.state = PingParser.WAIT_START
             self.payload_length = 0
             self.message_id = 0
+            return PingParser.NEW_MESSAGE
 
-            if self.rx_msg.verify_checksum():
-                self.parsed += 1
-                return PingParser.NEW_MESSAGE
-            else:
-                print("error")
-                self.errors += 1
 
         return self.state
 
