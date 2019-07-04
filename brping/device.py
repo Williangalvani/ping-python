@@ -27,6 +27,8 @@ class PingDevice(object):
             ## Serial object for device communication
             self.iodev = serial.Serial(device_name, baudrate)
             self.iodev.timeout = 1
+            #self.iodev.write("hello".encode("utf-8"))
+            #self.iodev.send_break(1.0)
 
         except Exception as e:
             print("Failed to open the given serial port")
@@ -251,26 +253,17 @@ if __name__ == "__main__":
     m.gain_setting = 0
     m.angle = 1
     m.transmit_duration = 5
-    m.sample_period = 40000
+    m.sample_period = 80
     m.transmit_frequency = 1000
-    m.number_of_samples = 1200
+    m.number_of_samples = 200
     m.transmit = 1
     m.reserved = 0
+
+
+for angle in range(20):
+    m.angle = angle
     m.pack_msg_data()
     p.write(m.msg_data)
-    print(p.wait_message(definitions.PING360_DEVICE_DATA, 6.0))
+    p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
 
-
-    p.write(bytearray("asBdf".encode("utf-8")))
-
-    print("\ntesting get_device_data")
-    result = p.get_device_data()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
-
-    print("\ntesting get_device_data")
-    result = p.get_device_data()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
-
-    print(p)
+print(p)
