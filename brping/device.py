@@ -8,6 +8,7 @@
 # DO NOT EDIT
 # ~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!~!
 
+from collections import deque
 from brping import pingmessage
 import definitions
 import serial
@@ -17,6 +18,7 @@ import time
 class PingDevice(object):
 
     def __init__(self, device_name, baudrate=115200):
+        self._input_buffer = deque()
         if device_name is None:
             print("Device name is required")
             return
@@ -47,10 +49,12 @@ class PingDevice(object):
     # @return A new PingMessage: as soon as a message is parsed (there may be data remaining in the buffer to be parsed, thus requiring subsequent calls to read())
     # @return None: if the buffer is empty and no message has been parsed
     def read(self):
-        while self.iodev.in_waiting:
-            b = self.iodev.read()
+        self._input_buffer.extendleft(self.iodev.read(self.iodev.in_waiting))
+        while len(self._input_buffer):
 
-            if self.parser.parse_byte(ord(b)) == pingmessage.PingParser.NEW_MESSAGE:
+            b = self._input_buffer.pop()
+
+            if self.parser.parse_byte(b) == pingmessage.PingParser.NEW_MESSAGE:
                 #self.handle_message(self.parser.rx_msg)
                 return self.parser.rx_msg
         return None
@@ -255,7 +259,7 @@ if __name__ == "__main__":
     m.transmit_duration = 5
     m.sample_period = 80
     m.transmit_frequency = 1000
-    m.number_of_samples = 1200
+    m.number_of_samples = 200
     m.transmit = 1
     m.reserved = 0
     m.pack_msg_data()
