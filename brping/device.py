@@ -51,7 +51,7 @@ class PingDevice(object):
             b = self.iodev.read()
 
             if self.parser.parse_byte(ord(b)) == pingmessage.PingParser.NEW_MESSAGE:
-                self.handle_message(self.parser.rx_msg)
+                #self.handle_message(self.parser.rx_msg)
                 return self.parser.rx_msg
         return None
 
@@ -231,20 +231,20 @@ if __name__ == "__main__":
 
     print("Initialized: %s" % p.initialize())
 
-    print("\ntesting get_device_information")
-    result = p.get_device_information()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
+    # print("\ntesting get_device_information")
+    # result = p.get_device_information()
+    # print("  " + str(result))
+    # print("  > > pass: %s < <" % (result is not None))
 
-    print("\ntesting get_protocol_version")
-    result = p.get_protocol_version()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
+    # print("\ntesting get_protocol_version")
+    # result = p.get_protocol_version()
+    # print("  " + str(result))
+    # print("  > > pass: %s < <" % (result is not None))
 
-    print("\ntesting get_device_data")
-    result = p.get_device_data()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
+    # print("\ntesting get_device_data")
+    # result = p.get_device_data()
+    # print("  " + str(result))
+    # print("  > > pass: %s < <" % (result is not None))
 
 
     print("\ntesting control_transducer")
@@ -255,14 +255,14 @@ if __name__ == "__main__":
     m.transmit_duration = 5
     m.sample_period = 80
     m.transmit_frequency = 1000
-    m.number_of_samples = 200
+    m.number_of_samples = 1200
     m.transmit = 1
     m.reserved = 0
+    m.pack_msg_data()
 
 
 for angle in range(20):
-    m.angle = angle
-    m.pack_msg_data()
+    # m.angle = angle
     p.write(m.msg_data)
     p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
 
