@@ -30,7 +30,8 @@ class PingDevice(object):
             self.iodev = serial.Serial(device_name, baudrate)
             self.iodev.timeout = 1
             #self.iodev.write("hello".encode("utf-8"))
-            #self.iodev.send_break(1.0)
+            self.iodev.send_break(1.0)
+            self.iodev.write("U".encode("utf-8"))
 
         except Exception as e:
             print("Failed to open the given serial port")
@@ -55,7 +56,6 @@ class PingDevice(object):
             b = self._input_buffer.pop()
 
             if self.parser.parse_byte(b) == pingmessage.PingParser.NEW_MESSAGE:
-                self.write(bytearray(b'BR\x0e\x00)\n\x00\x00\x01\x00\x01\x00\x05\x00P\x00\xe8\x03\xc8\x00\x01\x00\xe0\x02'))
                 #self.handle_message(self.parser.rx_msg)
                 return self.parser.rx_msg
         return None
@@ -263,12 +263,12 @@ if __name__ == "__main__":
     m.number_of_samples = 200
     m.transmit = 1
     m.reserved = 0
-    m.pack_msg_data()
 
-    p.write(bytearray(b'BR\x0e\x00)\n\x00\x00\x01\x00\x01\x00\x05\x00P\x00\xe8\x03\xc8\x00\x01\x00\xe0\x02'))
-for angle in range(20):
-    # m.angle = angle
-    #p.write(m.msg_data)
+
+for angle in range(40):
+    m.angle = angle
+    m.pack_msg_data()
+    p.write(m.msg_data)
     p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
 
 print(p)
