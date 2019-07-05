@@ -260,15 +260,17 @@ if __name__ == "__main__":
     m.transmit_duration = 5
     m.sample_period = 80
     m.transmit_frequency = 1000
-    m.number_of_samples = 200
+    m.number_of_samples = 1200
     m.transmit = 1
     m.reserved = 0
 
-
-for angle in range(40):
+tstart = time.time()
+for angle in range(400):
     m.angle = angle
     m.pack_msg_data()
     p.write(m.msg_data)
     p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
+tend = time.time()
 
 print(p)
+print(tend - tstart)
