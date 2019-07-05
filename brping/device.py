@@ -175,27 +175,6 @@ class PingDevice(object):
         })
         return data
 
-    ##
-    # @brief Get a protocol_version message from the device\n
-    # Message description:\n
-    # The protocol version
-    #
-    # @return None if there is no reply from the device, otherwise a dictionary with the following keys:\n
-    # version_major: Protocol version major number.\n
-    # version_minor: Protocol version minor number.\n
-    # version_patch: Protocol version patch number.\n
-    # reserved: reserved\n
-    def get_protocol_version(self):
-        if self.request(definitions.COMMON_PROTOCOL_VERSION) is None:
-            return None
-        data = ({
-            "version_major": self._version_major,  # Protocol version major number.
-            "version_minor": self._version_minor,  # Protocol version minor number.
-            "version_patch": self._version_patch,  # Protocol version patch number.
-            "reserved": self._reserved,  # reserved
-        })
-        return data
-
     def get_protocol_version(self):
         if self.request(definitions.COMMON_PROTOCOL_VERSION) is None:
             return None
@@ -264,13 +243,13 @@ if __name__ == "__main__":
     m.transmit = 1
     m.reserved = 0
 
-tstart = time.time()
-for angle in range(400):
-    m.angle = angle
-    m.pack_msg_data()
-    p.write(m.msg_data)
-    p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
-tend = time.time()
+    tstart = time.time()
+    for angle in range(400):
+        m.angle = angle
+        m.pack_msg_data()
+        p.write(m.msg_data)
+        p.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
+    tend = time.time()
 
-print(p)
-print(tend - tstart)
+    print(p)
+    print(tend - tstart)
