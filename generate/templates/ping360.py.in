@@ -14,7 +14,7 @@ import time
 from device import PingDevice
 import definitions
 
-class Ping1D(PingDevice):
+class Ping360(PingDevice):
 
 {% for msg in messages["get"]|sort %}
     ##
@@ -27,14 +27,14 @@ class Ping1D(PingDevice):
     # {{field.name}}: {% if field.units %}Units: {{field.units}}; {% endif %}{{field.description}}\n
 {% endfor%}
     def get_{{msg}}(self):
-        if self.request(definitions.PING1D_{{msg|upper}}) is None:
+        if self.request(pingmessage.PING1D_{{msg|upper}}) is None:
             return None
         data = ({
 {% for field in messages["get"][msg].payload %}
             "{{field.name}}": self._{{field.name}},  # {% if field.units %}Units: {{field.units}}; {% endif %}{{field.description}}
 {% endfor %}
         })
-        return data
+        return Ping1Ddata
 
 {% endfor %}
 {% for msg in messages["set"]|sort %}
@@ -50,13 +50,13 @@ class Ping1D(PingDevice):
     #
     # @return If verify is False, True on successful communication with the device. If verify is False, True if the new device parameters are verified to have been written correctly. False otherwise (failure to read values back or on verification failure)
     def {{msg}}(self{% for field in messages["set"][msg].payload %}, {{field.name}}{% endfor %}, verify=True):
-        m = pingmessage.PingMessage(definitions.PING1D_{{msg|upper}})
+        m = pingmessage.PingMessage(pingmessage.PING1D_{{msg|upper}})
 {% for field in messages["set"][msg].payload %}
         m.{{field.name}} = {{field.name}}
 {% endfor %}
         m.pack_msg_data()
         self.write(m.msg_data)
-        if self.request(definitions.PING1D_{{msg|replace("set_", "")|upper}}) is None:
+        if self.request(pingmessage.PING1D_{{msg|replace("set_", "")|upper}}) is None:
             return False
         # Read back the data and check that changes have been applied
         if (verify
@@ -64,9 +64,29 @@ class Ping1D(PingDevice):
                 and ({% for field in messages["set"][msg].payload %}self._{{field.name}} != {{field.name}}{{ " or " if not loop.last }}{% endfor %})):
 {% endif %}
             return False
-        return True  # success
+        return True  # success{% for field in messages["set"][msg].payload %}
+        m.{{field.name}} = {{field.name}}
+{% endfor %}
+        m.pack_msg_data()
+        self.write(m.msg_data)
 
 {% endfor %}
+
+{% for msg in messages["control"]|sort %}
+    def control_{{msg}}(self{% for field in messages["control"][msg].payload %}, {{field.name}}{% endfor %}):
+        m = pingmessage.PingMessage(pingmessage.PING1D_{{msg|upper}})
+{% for field in messages["control"][msg].payload %}
+        m.{{field.name}} = {{field.name}}
+{% endfor %}
+        m.pack_msg_data()
+        self.write(m.msg_data) 
+{% endfor %}
+
+{% for field in messages["get"]["device_data"] %}
+    def set_{{field}}({{field}}):
+        control
+{% endfor %}
+
 
 if __name__ == "__main__":
     import argparse
@@ -87,19 +107,6 @@ if __name__ == "__main__":
     print("  > > pass: %s < <" % (result is not None))
 
 {% endfor %}
-    print("\ntesting set_device_id")
-    print("  > > pass: %s < <" % p.set_device_id(43))
-    print("\ntesting set_mode_auto")
-    print("  > > pass: %s < <" % p.set_mode_auto(False))
-    print("\ntesting set_range")
-    print("  > > pass: %s < <" % p.set_range(1000, 2000))
-    print("\ntesting set_speed_of_sound")
-    print("  > > pass: %s < <" % p.set_speed_of_sound(1444000))
-    print("\ntesting set_ping_interval")
-    print("  > > pass: %s < <" % p.set_ping_interval(36))
-    print("\ntesting set_gain_setting")
-    print("  > > pass: %s < <" % p.set_gain_setting(3))
-    print("\ntesting set_ping_enable")
-    print("  > > pass: %s < <" % p.set_ping_enable(False))
+
 
     print(p)
