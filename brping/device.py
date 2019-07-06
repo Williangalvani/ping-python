@@ -26,6 +26,8 @@ class PingDevice(object):
             ## Serial object for device communication
             self.iodev = serial.Serial(device_name, baudrate)
             self.iodev.timeout = 1
+            self.iodev.send_break()
+            self.iodev.write("U".encode("utf-8"))
 
         except Exception as e:
             print("Failed to open the given serial port")
@@ -109,7 +111,6 @@ class PingDevice(object):
     def handle_message(self, msg):
         if msg.message_id in pingmessage.payload_dict:
             for attr in pingmessage.payload_dict[msg.message_id]["field_names"]:
-                print("setting attr:", attr)
                 setattr(self, "_" + attr, getattr(msg, attr))
         else:
             print("Unrecognized message: %d", msg)

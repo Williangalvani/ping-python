@@ -11,7 +11,8 @@
 from brping import pingmessage
 import serial
 import time
-import device
+from device import PingDevice
+import definitions
 
 class Ping360(PingDevice):
 
@@ -30,7 +31,7 @@ class Ping360(PingDevice):
     # number_of_samples: Number of samples per reflected signal\n
     # data: 8 bit binary data array representing sonar echo strength\n
     def get_device_data(self):
-        if self.request(pingmessage.PING1D_DEVICE_DATA) is None:
+        if self.request(definitions.PING360_DEVICE_DATA) is None:
             return None
         data = ({
             "mode": self._mode,  # Operating mode (1 for Ping360)
@@ -55,12 +56,12 @@ class Ping360(PingDevice):
     #
     # @return If verify is False, True on successful communication with the device. If verify is False, True if the new device parameters are verified to have been written correctly. False otherwise (failure to read values back or on verification failure)
     def set_device_id(self, id, reserved, verify=True):
-        m = pingmessage.PingMessage(pingmessage.PING1D_SET_DEVICE_ID)
+        m = pingmessage.PingMessage(definitions.PING360_SET_DEVICE_ID)
         m.id = id
         m.reserved = reserved
         m.pack_msg_data()
         self.write(m.msg_data)
-        if self.request(pingmessage.PING1D_DEVICE_ID) is None:
+        if self.request(definitions.PING360_DEVICE_ID) is None:
             return False
         # Read back the data and check that changes have been applied
         if (verify
@@ -73,13 +74,14 @@ class Ping360(PingDevice):
 
 
     def control_reset(self, bootloader, reserved):
-        m = pingmessage.PingMessage(pingmessage.PING1D_RESET)
+        m = pingmessage.PingMessage(definitions.PING360_RESET)
         m.bootloader = bootloader
         m.reserved = reserved
         m.pack_msg_data()
         self.write(m.msg_data) 
+
     def control_transducer(self, mode, gain_setting, angle, transmit_duration, sample_period, transmit_frequency, number_of_samples, transmit, reserved):
-        m = pingmessage.PingMessage(pingmessage.PING1D_TRANSDUCER)
+        m = pingmessage.PingMessage(definitions.PING360_TRANSDUCER)
         m.mode = mode
         m.gain_setting = gain_setting
         m.angle = angle
@@ -90,15 +92,25 @@ class Ping360(PingDevice):
         m.transmit = transmit
         m.reserved = reserved
         m.pack_msg_data()
-        self.write(m.msg_data) 
+        self.write(m.msg_data)
+        return self.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
 
-    def set_id(id):
-        control
-    def set_description(description):
-        control
-    def set_payload(payload):
-        control
+    def transmit(self):
+        return self.control_transducer(
+            self.mode,
+            self.gain_setting,
+            self.angle,
+            self.transmit_duration,
+            self.sample_period,
+            self.transmit_frequency,
+            self.number_of_samples,
+            1,
+            0
+        )
 
+    def transmitAngle(self, angle):
+        self.angle = angle
+        return self.transmit()
 
 if __name__ == "__main__":
     import argparse
@@ -108,15 +120,26 @@ if __name__ == "__main__":
     parser.add_argument('--baudrate', action="store", type=int, default=115200, help="Ping device baudrate.")
     args = parser.parse_args()
 
-    p = Ping1D(args.device, args.baudrate)
+    p = Ping360(args.device, args.baudrate)
 
     print("Initialized: %s" % p.initialize())
-
     print("\ntesting get_device_data")
     result = p.get_device_data()
     print("  " + str(result))
     print("  > > pass: %s < <" % (result is not None))
 
 
+    p.mode = 1
+    p.gain_setting = 0
+    p.angle = 0
+    p.transmit_duration = 100
+    p.sample_period = 80
+    p.transmit_frequency = 740
+    p.number_of_samples = 200
+
+    p.transmit()
+
+    for x in range(400):
+        print(p.transmitAngle(x))
 
     print(p)

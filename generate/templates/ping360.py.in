@@ -27,7 +27,7 @@ class Ping360(PingDevice):
     # {{field.name}}: {% if field.units %}Units: {{field.units}}; {% endif %}{{field.description}}\n
 {% endfor%}
     def get_{{msg}}(self):
-        if self.request(pingmessage.PING1D_{{msg|upper}}) is None:
+        if self.request(definitions.PING360_{{msg|upper}}) is None:
             return None
         data = ({
 {% for field in messages["get"][msg].payload %}
@@ -50,13 +50,13 @@ class Ping360(PingDevice):
     #
     # @return If verify is False, True on successful communication with the device. If verify is False, True if the new device parameters are verified to have been written correctly. False otherwise (failure to read values back or on verification failure)
     def {{msg}}(self{% for field in messages["set"][msg].payload %}, {{field.name}}{% endfor %}, verify=True):
-        m = pingmessage.PingMessage(pingmessage.PING1D_{{msg|upper}})
+        m = pingmessage.PingMessage(definitions.PING360_{{msg|upper}})
 {% for field in messages["set"][msg].payload %}
         m.{{field.name}} = {{field.name}}
 {% endfor %}
         m.pack_msg_data()
         self.write(m.msg_data)
-        if self.request(pingmessage.PING1D_{{msg|replace("set_", "")|upper}}) is None:
+        if self.request(definitions.PING360_{{msg|replace("set_", "")|upper}}) is None:
             return False
         # Read back the data and check that changes have been applied
         if (verify
@@ -74,19 +74,32 @@ class Ping360(PingDevice):
 
 {% for msg in messages["control"]|sort %}
     def control_{{msg}}(self{% for field in messages["control"][msg].payload %}, {{field.name}}{% endfor %}):
-        m = pingmessage.PingMessage(pingmessage.PING1D_{{msg|upper}})
+        m = pingmessage.PingMessage(definitions.PING360_{{msg|upper}})
 {% for field in messages["control"][msg].payload %}
         m.{{field.name}} = {{field.name}}
 {% endfor %}
         m.pack_msg_data()
         self.write(m.msg_data) 
+
 {% endfor %}
 
-{% for field in messages["get"]["device_data"] %}
-    def set_{{field}}({{field}}):
-        control
-{% endfor %}
 
+    def transmit(self):
+        self.control_transducer(
+            self.mode,
+            self.gain_setting,
+            self.angle,
+            self.transmit_duration,
+            self.sample_period,
+            self.transmit_frequency,
+            self.number_of_samples,
+            1,
+            0
+        )
+
+    def transmitAngle(self, angle):
+        self.angle = angle
+        self.transmit()
 
 if __name__ == "__main__":
     import argparse
@@ -96,7 +109,7 @@ if __name__ == "__main__":
     parser.add_argument('--baudrate', action="store", type=int, default=115200, help="Ping device baudrate.")
     args = parser.parse_args()
 
-    p = Ping1D(args.device, args.baudrate)
+    p = Ping360(args.device, args.baudrate)
 
     print("Initialized: %s" % p.initialize())
 
@@ -108,5 +121,17 @@ if __name__ == "__main__":
 
 {% endfor %}
 
+    p.mode = 1
+    p.gain_setting = 0
+    p.angle = 0
+    p.transmit_duration = 100
+    p.sample_period = 80
+    p.transmit_frequency = 740
+    p.number_of_samples = 200
+
+    p.transmit()
+
+    for x in range(40):
+        p.transmitAngle(x)
 
     print(p)

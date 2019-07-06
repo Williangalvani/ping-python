@@ -29,6 +29,8 @@ class PingDevice(object):
             ## Serial object for device communication
             self.iodev = serial.Serial(device_name, baudrate)
             self.iodev.timeout = 1
+            self.iodev.send_break()
+            self.iodev.write("U".encode("utf-8"))
 
         except Exception as e:
             print("Failed to open the given serial port")
@@ -69,8 +71,6 @@ class PingDevice(object):
     #
     # @return True if the device replies with expected data, False otherwise
     def initialize(self):
-        if self.request(pingmessage.PING1D_VOLTAGE_5) is None:
-            return False
         return True
 
     ##
