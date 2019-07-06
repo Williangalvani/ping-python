@@ -89,7 +89,7 @@ class PingDevice(object):
         msg.requested_id = m_id
         msg.pack_msg_data()
         self.write(msg.msg_data)
-        return self.wait_message(m_id, timeout)
+        return self.wait_message([m_id, definitions.COMMON_NACK], timeout)
 
     ##
     # @brief Wait until we receive a message from the device with the desired message_id for timeout seconds
@@ -98,12 +98,12 @@ class PingDevice(object):
     # @param timeout: The timeout period in seconds to wait
     #
     # @return PingMessage: the message from the device if it is received within timeout period, None otherwise
-    def wait_message(self, message_id, timeout=0.5):
+    def wait_message(self, message_ids, timeout=0.5):
         tstart = time.time()
         while time.time() < tstart + timeout:
             msg = self.read()
             if msg is not None:
-                if msg.message_id == message_id:
+                if msg.message_id in message_ids:
                     return msg
         return None
 

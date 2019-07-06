@@ -98,7 +98,7 @@ class Ping360(PingDevice):
             1,
             0
         )
-        return self.wait_message(definitions.PING360_DEVICE_DATA)
+        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
     
     def transmit(self):
         return self.transmitAngle(self.angle)
@@ -119,7 +119,7 @@ class Ping360(PingDevice):
             0,
             0
         )
-        return self.wait_message(definitions.PING360_DEVICE_DATA)
+        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
 
 {% endif %}
 {% endfor %}
@@ -137,19 +137,22 @@ if __name__ == "__main__":
 
     print("Initialized: %s" % p.initialize())
 
-{% for msg in messages["get"]|sort %}
-    print("\ntesting get_{{msg}}")
-    result = p.get_{{msg}}()
-    print("  " + str(result))
-    print("  > > pass: %s < <" % (result is not None))
+    print(p.readParameters())
+    
+    print(p.set_transmit_frequency(800))
+    print(p.set_sample_period(80))
+    print(p.set_number_of_samples(200))
 
-{% endfor %}
+    print(p.readParameters())
 
-    p.readParameters()
 
-    p.set_transmit_frequency(800)
-    p.set_sample_period(80)
-    p.set_number_of_samples(200)
+    print(p.readParameters())
+    
+    print(p.set_transmit_frequency(800))
+    print(p.set_sample_period(80))
+    print(p.set_number_of_samples(200))
+
+    print(p.readParameters())
 
     for x in range(40):
         print(p.transmitAngle(x))

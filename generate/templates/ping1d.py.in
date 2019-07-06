@@ -16,6 +16,15 @@ import definitions
 
 class Ping1D(PingDevice):
 
+    def legacyRequest(self, m_id, timeout=0.5):
+        msg = pingmessage.PingMessage()
+        # legacy hack logic is in PingMessage
+        # TODO: remove that logic and construct/assemble an arbitrary PingMessage
+        msg.request_id = m_id 
+        msg.pack_msg_data()
+        self.write(msg.msg_data)
+        return self.wait_message([m_id, definitions.COMMON_NACK], timeout)
+
 {% for msg in messages["get"]|sort %}
     ##
     # @brief Get a {{msg|replace("get_", "")}} message from the device\n
@@ -27,7 +36,7 @@ class Ping1D(PingDevice):
     # {{field.name}}: {% if field.units %}Units: {{field.units}}; {% endif %}{{field.description}}\n
 {% endfor%}
     def get_{{msg}}(self):
-        if self.request(definitions.PING1D_{{msg|upper}}) is None:
+        if self.legacyRequest(definitions.PING1D_{{msg|upper}}) is None:
             return None
         data = ({
 {% for field in messages["get"][msg].payload %}
@@ -56,7 +65,7 @@ class Ping1D(PingDevice):
 {% endfor %}
         m.pack_msg_data()
         self.write(m.msg_data)
-        if self.request(definitions.PING1D_{{msg|replace("set_", "")|upper}}) is None:
+        if self.legacyRequest(definitions.PING1D_{{msg|replace("set_", "")|upper}}) is None:
             return False
         # Read back the data and check that changes have been applied
         if (verify
