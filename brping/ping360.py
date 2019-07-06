@@ -43,7 +43,7 @@ class Ping360(PingDevice):
             "number_of_samples": self._number_of_samples,  # Number of samples per reflected signal
             "data": self._data,  # 8 bit binary data array representing sonar echo strength
         })
-        return Ping1Ddata
+        return data
 
     ##
     # @brief Send a set_device_id message to the device\n
@@ -92,25 +92,128 @@ class Ping360(PingDevice):
         m.transmit = transmit
         m.reserved = reserved
         m.pack_msg_data()
-        self.write(m.msg_data)
-        return self.wait_message(definitions.PING360_DEVICE_DATA, 4.0)
+        self.write(m.msg_data) 
 
-    def transmit(self):
-        return self.control_transducer(
-            self.mode,
-            self.gain_setting,
-            self.angle,
-            self.transmit_duration,
-            self.sample_period,
-            self.transmit_frequency,
-            self.number_of_samples,
+
+    def readParameters(self):
+        return self.request(definitions.PING360_DEVICE_DATA)
+
+    def transmitAngle(self, angle):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
             1,
             0
         )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+    
+    def transmit(self):
+        return self.transmitAngle(self.angle)
 
-    def transmitAngle(self, angle):
-        self.angle = angle
-        return self.transmit()
+    def set_mode(self, mode):
+        self.control_transducer(
+            mode,
+            self._gain_setting,
+            self._angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_gain_setting(self, gain_setting):
+        self.control_transducer(
+            self._mode,
+            gain_setting,
+            self._angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_angle(self, angle):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_transmit_duration(self, transmit_duration):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            self._angle,
+            transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_sample_period(self, sample_period):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            self._angle,
+            self._transmit_duration,
+            sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_transmit_frequency(self, transmit_frequency):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            self._angle,
+            self._transmit_duration,
+            self._sample_period,
+            transmit_frequency,
+            self._number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+    def set_number_of_samples(self, number_of_samples):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            self._angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            number_of_samples,
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+
 
 if __name__ == "__main__":
     import argparse
@@ -123,23 +226,20 @@ if __name__ == "__main__":
     p = Ping360(args.device, args.baudrate)
 
     print("Initialized: %s" % p.initialize())
+
     print("\ntesting get_device_data")
     result = p.get_device_data()
     print("  " + str(result))
     print("  > > pass: %s < <" % (result is not None))
 
 
-    p.mode = 1
-    p.gain_setting = 0
-    p.angle = 0
-    p.transmit_duration = 100
-    p.sample_period = 80
-    p.transmit_frequency = 740
-    p.number_of_samples = 200
+    p.readParameters()
 
-    p.transmit()
+    p.set_transmit_frequency(800)
+    p.set_sample_period(80)
+    p.set_number_of_samples(200)
 
-    for x in range(400):
+    for x in range(40):
         print(p.transmitAngle(x))
 
     print(p)

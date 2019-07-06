@@ -11,6 +11,7 @@
 from brping import pingmessage
 import serial
 import time
+import definitions
 
 
 class PingDevice(object):
@@ -81,8 +82,8 @@ class PingDevice(object):
     #
     # @todo handle nack to exit without blocking
     def request(self, m_id, timeout=0.5):
-        msg = pingmessage.PingMessage()
-        msg.request_id = m_id
+        msg = pingmessage.PingMessage(definitions.COMMON_GENERAL_REQUEST)
+        msg.requested_id = m_id
         msg.pack_msg_data()
         self.write(msg.msg_data)
         return self.wait_message(m_id, timeout)

@@ -34,7 +34,7 @@ class Ping360(PingDevice):
             "{{field.name}}": self._{{field.name}},  # {% if field.units %}Units: {{field.units}}; {% endif %}{{field.description}}
 {% endfor %}
         })
-        return Ping1Ddata
+        return data
 
 {% endfor %}
 {% for msg in messages["set"]|sort %}
@@ -83,23 +83,47 @@ class Ping360(PingDevice):
 
 {% endfor %}
 
+    def readParameters(self):
+        return self.request(definitions.PING360_DEVICE_DATA)
 
-    def transmit(self):
+    def transmitAngle(self, angle):
         self.control_transducer(
-            self.mode,
-            self.gain_setting,
-            self.angle,
-            self.transmit_duration,
-            self.sample_period,
-            self.transmit_frequency,
-            self.number_of_samples,
+            self._mode,
+            self._gain_setting,
+            angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
             1,
             0
         )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+    
+    def transmit(self):
+        return self.transmitAngle(self.angle)
 
-    def transmitAngle(self, angle):
-        self.angle = angle
-        self.transmit()
+{% for field in messages["control"]["transducer"].payload %}
+{% if field.name != "transmit" and field.name != "reserved" %}
+    def set_{{field.name}}(self, {{field.name}}):
+        self.control_transducer(
+{% for field2 in messages["control"]["transducer"].payload %}
+{% if field2.name != "transmit" and field2.name != "reserved" %}
+{% if field == field2 %}
+            {{field2.name}},
+{% else %}
+            self._{{field2.name}},
+{% endif %}
+{% endif %}
+{% endfor %}
+            0,
+            0
+        )
+        return self.wait_message(definitions.PING360_DEVICE_DATA)
+
+{% endif %}
+{% endfor %}
+
 
 if __name__ == "__main__":
     import argparse
@@ -121,17 +145,13 @@ if __name__ == "__main__":
 
 {% endfor %}
 
-    p.mode = 1
-    p.gain_setting = 0
-    p.angle = 0
-    p.transmit_duration = 100
-    p.sample_period = 80
-    p.transmit_frequency = 740
-    p.number_of_samples = 200
+    p.readParameters()
 
-    p.transmit()
+    p.set_transmit_frequency(800)
+    p.set_sample_period(80)
+    p.set_number_of_samples(200)
 
     for x in range(40):
-        p.transmitAngle(x)
+        print(p.transmitAngle(x))
 
     print(p)
