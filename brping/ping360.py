@@ -92,6 +92,7 @@ class Ping360(PingDevice):
         m.transmit = transmit
         m.reserved = reserved
         m.pack_msg_data()
+        # print("\n\ncontrol transducer", m)
         self.write(m.msg_data) 
 
 
@@ -228,15 +229,31 @@ if __name__ == "__main__":
 
     print(p.readParameters())
     
-    print(p.set_transmit_frequency(800))
+    print("\n\nset transmit frequency")
+    print(p.set_transmit_frequency(740))
+    print("\n\nset transmit duration")
+
+    print(p.set_transmit_duration(5))
+    print("\n\nset sample period")
+
     print(p.set_sample_period(80))
+    print("\n\nset nsamps")
+
     print(p.set_number_of_samples(200))
+    #print(p.set_angle(0))
 
     print(p.readParameters())
 
-    for x in range(80):
-        print(p.transmitAngle(5*x))
+    # exit(0)
+
+    tstart_s = time.time()
+    for x in range(400):
+        #print(p.transmitAngle(x))
+        p.transmitAngle(x)
+    tend_s = time.time()
 
     print(p)
+
+    print("full scan in %d ms" % ((tend_s - tstart_s) * 1000))
 
     p.control_reset(1, 0)
