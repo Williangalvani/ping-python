@@ -95,26 +95,6 @@ class Ping360(PingDevice):
         self.write(m.msg_data) 
 
 
-    def readParameters(self):
-        return self.request(definitions.PING360_DEVICE_DATA)
-
-    def transmitAngle(self, angle):
-        self.control_transducer(
-            self._mode,
-            self._gain_setting,
-            angle,
-            self._transmit_duration,
-            self._sample_period,
-            self._transmit_frequency,
-            self._number_of_samples,
-            1,
-            0
-        )
-        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
-    
-    def transmit(self):
-        return self.transmitAngle(self.angle)
-
     def set_mode(self, mode):
         self.control_transducer(
             mode,
@@ -214,13 +194,32 @@ class Ping360(PingDevice):
         return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
 
 
+    def readParameters(self):
+        return self.request(definitions.PING360_DEVICE_DATA)
+
+    def transmitAngle(self, angle):
+        self.control_transducer(
+            self._mode,
+            self._gain_setting,
+            angle,
+            self._transmit_duration,
+            self._sample_period,
+            self._transmit_frequency,
+            self._number_of_samples,
+            1,
+            0
+        )
+        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
+    
+    def transmit(self):
+        return self.transmitAngle(self.angle)
 
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Ping python library example.")
     parser.add_argument('--device', action="store", required=True, type=str, help="Ping device port.")
-    parser.add_argument('--baudrate', action="store", type=int, default=115200, help="Ping device baudrate.")
+    parser.add_argument('--baudrate', action="store", type=int, default=2000000, help="Ping device baudrate.")
     args = parser.parse_args()
 
     p = Ping360(args.device, args.baudrate)
@@ -235,19 +234,9 @@ if __name__ == "__main__":
 
     print(p.readParameters())
 
-
-    print(p.readParameters())
-    
-    print(p.set_transmit_frequency(800))
-    print(p.set_sample_period(80))
-    print(p.set_number_of_samples(200))
-
-    print(p.readParameters())
-
     for x in range(80):
         print(p.transmitAngle(5*x))
 
     print(p)
 
-    time.sleep(1)
     p.control_reset(1, 0)

@@ -148,7 +148,7 @@ class PingDevice(object):
     # firmware_version_patch: Firmware version patch number.\n
     # reserved: reserved\n
     def get_device_information(self):
-        if self.request(pingmessage.PING1D_DEVICE_INFORMATION) is None:
+        if self.request(definitions.COMMON_DEVICE_INFORMATION) is None:
             return None
         data = ({
             "device_type": self._device_type,  # Device type. 0: Unknown; 1: Ping Echosounder; 2: Ping360
@@ -171,7 +171,7 @@ class PingDevice(object):
     # version_patch: Protocol version patch number.\n
     # reserved: reserved\n
     def get_protocol_version(self):
-        if self.request(pingmessage.PING1D_PROTOCOL_VERSION) is None:
+        if self.request(definitions.COMMON_PROTOCOL_VERSION) is None:
             return None
         data = ({
             "version_major": self._version_major,  # Protocol version major number.
