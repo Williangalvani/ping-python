@@ -201,7 +201,6 @@ class PingMessage(object):
         # messages with variable length fields
         if self.message_id in variable_msgs or self.message_id in asciiMsgs:
             var_length = self.payload_length - payload_dict[self.message_id]["payload_length"]  # Subtract static length portion from payload length
-            print("length:", var_length, self.payload_length)
             if var_length <= 0:
                 return payload_dict[self.message_id]["format"]  # variable data portion is empty
 

@@ -80,6 +80,7 @@ class Ping360(PingDevice):
         m.pack_msg_data()
         self.write(m.msg_data) 
 
+    # TODO default args
     def control_transducer(self, mode, gain_setting, angle, transmit_duration, sample_period, transmit_frequency, number_of_samples, transmit, reserved):
         m = pingmessage.PingMessage(definitions.PING360_TRANSDUCER)
         m.mode = mode
@@ -92,9 +93,9 @@ class Ping360(PingDevice):
         m.transmit = transmit
         m.reserved = reserved
         m.pack_msg_data()
-        # print("\n\ncontrol transducer", m)
-        self.write(m.msg_data) 
-
+        self.write(m.msg_data)
+        #(b'BR\x0e\x00)\n\x00\x00\x01\x00\x00\x00 \x00(\x00\xe4\x02\x00\x04\x01\x00\t\x02')
+        #(b'BR\x0e\x00)\n\x00\x00\x01\x00\x00\x00 \x00P\x00\xe4\x02\x00\x04\x01\x001\x02')
 
     def set_mode(self, mode):
         self.control_transducer(
@@ -164,7 +165,7 @@ class Ping360(PingDevice):
             0,
             0
         )
-        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
+        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.5)
 
     def set_transmit_frequency(self, transmit_frequency):
         self.control_transducer(
@@ -210,10 +211,10 @@ class Ping360(PingDevice):
             1,
             0
         )
-        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.0)
+        return self.wait_message([definitions.PING360_DEVICE_DATA, definitions.COMMON_NACK], 4.5)
     
     def transmit(self):
-        return self.transmitAngle(self.angle)
+        return self.transmitAngle(self._angle)
 
 if __name__ == "__main__":
     import argparse
@@ -227,10 +228,25 @@ if __name__ == "__main__":
 
     print("Initialized: %s" % p.initialize())
 
+    print("request device_data message")
     print(p.readParameters())
-    
-    print("\n\nset transmit frequency")
-    print(p.set_transmit_frequency(740))
+
+    print(p.set_sample_period(80))
+
+    print(p.readParameters())
+
+    print("1")
+    print(p.transmit())
+
+    print("2")
+    print(p.transmit())
+
+    print("3")
+    print(p.readParameters())
+
+    print("control_transducer success, reply is device_data")
+    print(p.transmit())
+
     print("\n\nset transmit duration")
 
     print(p.set_transmit_duration(5))
@@ -244,8 +260,6 @@ if __name__ == "__main__":
 
     print(p.readParameters())
 
-    # exit(0)
-
     tstart_s = time.time()
     for x in range(400):
         #print(p.transmitAngle(x))
@@ -256,4 +270,4 @@ if __name__ == "__main__":
 
     print("full scan in %d ms" % ((tend_s - tstart_s) * 1000))
 
-    p.control_reset(1, 0)
+    p.control_reset(0, 0)
