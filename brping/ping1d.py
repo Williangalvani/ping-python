@@ -16,6 +16,13 @@ import definitions
 
 class Ping1D(PingDevice):
 
+    _device_id = None
+    _device_type = None
+    _device_model = None
+    _firmware_version_major = None
+    _firmware_version_minor = None
+    _firmware_version_patch = None
+
     def legacyRequest(self, m_id, timeout=0.5):
         msg = pingmessage.PingMessage()
         # legacy hack logic is in PingMessage
