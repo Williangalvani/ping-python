@@ -33,13 +33,14 @@ class Ping1D(PingDevice):
     # @return None if there is no reply from the device, otherwise a dictionary with the following keys:\n
     # device_id: The device ID (0-254). 255 is reserved for broadcast messages.\n
     def get_device_id(self):
-        if self.legacyRequest(definitions.PING1D_DEVICE_ID) is None:
+        response = self.legacyRequest(definitions.PING1D_DEVICE_ID)
+        if response is None or response.message_id == definitions.COMMON_NACK:
             return None
+
         data = ({
             "device_id": self._device_id,  # The device ID (0-254). 255 is reserved for broadcast messages.
         })
         return data
-
     ##
     # @brief Get a distance message from the device\n
     # Message description:\n
