@@ -107,6 +107,7 @@ class PingDevice(object):
     # @param msg: the PingMessage to handle.
     def handle_message(self, msg):
         if msg.message_id in pingmessage.payload_dict:
+            self._device_id = msg.src_device_id
             for attr in pingmessage.payload_dict[msg.message_id]["field_names"]:
                 setattr(self, "_" + attr, getattr(msg, attr))
         else:
@@ -147,6 +148,7 @@ class PingDevice(object):
         if self.request(definitions.COMMON_DEVICE_INFORMATION) is None:
             return None
         data = ({
+            "device_id": self._device_id,
             "device_type": self._device_type,  # Device type. 0: Unknown; 1: Ping Echosounder; 2: Ping360
             "device_revision": self._device_revision,  # device-specific hardware revision
             "firmware_version_major": self._firmware_version_major,  # Firmware version major number.
