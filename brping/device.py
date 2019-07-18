@@ -22,8 +22,6 @@ class PingDevice(object):
             return
 
         try:
-            print("Opening %s at %d bps" % (device_name, baudrate))
-
             ## Serial object for device communication
             self.iodev = serial.Serial(device_name, baudrate)
             self.iodev.timeout = 1
